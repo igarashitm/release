@@ -34,6 +34,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.switchyard.test.ArquillianUtil;
+import org.switchyard.test.mixins.HornetQMixIn;
 import org.switchyard.test.quickstarts.util.ResourceDeployer;
 
 /**
@@ -56,34 +57,28 @@ public class TransformJsonQuickstartTest {
 
     @Test
     public void testDeployment() throws Exception {
-        ServerLocator locator = HornetQClient.createServerLocatorWithoutHA(new TransportConfiguration(NettyConnectorFactory.class.getName()));
-        ClientSessionFactory sessionFactory = locator.createSessionFactory();
-        
+        HornetQMixIn hqMixIn = new HornetQMixIn();
+        hqMixIn.initializeRemote();
+
         try {
-            ClientSession session = sessionFactory.createSession();
-            session.start();
-            ClientMessage message = session.createMessage(true);
-            message.getBodyBuffer().writeBytes(ORDER_JSON.getBytes());
+            ClientSession session = hqMixIn.getClientSession();
+            ClientMessage message = hqMixIn.createMessage(ORDER_JSON);
             ClientProducer producer = session.createProducer(JMS_PREFIX+REQUEST_QUEUE);
             producer.send(message);
-            producer.close();
-            session.close();
+            HornetQMixIn.closeClientProducer(producer);
+            HornetQMixIn.closeSession(session);
 
-            session = sessionFactory.createSession();
-            session.start();
+            session = hqMixIn.createClientSession();
             ClientConsumer consumer = session.createConsumer(JMS_PREFIX+RESPONSE_QUEUE);
             message = consumer.receive(3000);
             Assert.assertNotNull(message);
+            Assert.assertEquals(ORDER_ACK_JSON, hqMixIn.readObjectFromMessage(message));
 
-            byte[] bytea = new byte[message.getBodySize()];
-            message.getBodyBuffer().readBytes(bytea);
-            Assert.assertEquals(ORDER_ACK_JSON, new String(bytea));
-            
             message.acknowledge();
-            consumer.close();
-            session.close();
+            HornetQMixIn.closeClientConsumer(consumer);
+            HornetQMixIn.closeSession(session);
         } finally {
-            locator.close();
+            hqMixIn.uninitialize();
             ResourceDeployer.removeQueue(REQUEST_QUEUE);
             ResourceDeployer.removeQueue(RESPONSE_QUEUE);
         }
