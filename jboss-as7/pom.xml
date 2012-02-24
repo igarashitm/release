@@ -111,7 +111,7 @@
         </dependency>
         <dependency>
             <groupId>org.switchyard.quickstarts</groupId>
-            <artifactId>switchyard-quickstarts-hornetq-reference-binding</artifactId>
+            <artifactId>switchyard-quickstart-hornetq-reference-binding</artifactId>
             <scope>test</scope>
         </dependency>
          <dependency>

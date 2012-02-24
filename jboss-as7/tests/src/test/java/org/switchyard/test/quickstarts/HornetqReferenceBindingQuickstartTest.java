@@ -35,6 +35,7 @@ import org.junit.runner.RunWith;
 import org.switchyard.test.ArquillianUtil;
 import org.switchyard.test.quickstarts.util.ResourceDeployer;
 import org.switchyard.test.mixins.HTTPMixIn;
+import org.switchyard.test.mixins.HornetQMixIn;
 
 /**
 * A testcase for hornetq-reference-binding quickstart
@@ -43,10 +44,16 @@ import org.switchyard.test.mixins.HTTPMixIn;
 @RunWith(Arquillian.class)
 public class HornetqReferenceBindingQuickstartTest {
 
+    private static final String JMS_PREFIX = "jms.queue.";
+    private static final String QUEUE = "GreetingServiceQueue";
+    private static final String USER = "guest";
+    private static final String PASSWD = "guestp";
+    
     @Deployment(testable = false)
     public static JavaArchive createDeployment() throws IOException {
-        ResourceDeployer.addQueue("GreetingServiceQueue");
-        return ArquillianUtil.createJarQSDeployment("switchyard-quickstarts-hornetq-reference-binding");
+        ResourceDeployer.addQueue(QUEUE);
+        ResourceDeployer.addPropertiesUser(USER, PASSWD);
+        return ArquillianUtil.createJarQSDeployment("switchyard-quickstart-hornetq-reference-binding");
     }
     
     @Test
@@ -54,20 +61,22 @@ public class HornetqReferenceBindingQuickstartTest {
         /* TODO enable when SWITCHYARD-600/JBWS-3424 is resolved
 
         HTTPMixIn httpMixIn = new HTTPMixIn();
-        
+        HornetQMixIn hqMixIn = new HornetQMixIn(false);
+                                    .setUser(USER)
+                                    .setPassword(PASSWD);
         httpMixIn.initialize();
+        hqMixIn.initialize();
+        
         try {
             httpMixIn.postString("http://localhost:18001/quickstart-hornetq-reference-binding/GreetingService", SOAP_REQUEST);
-            ServerLocator locator = HornetQClient.createServerLocatorWithoutHA(new TransportConfiguration(NettyConnectorFactory.class.getName()));
-            ClientConsumer consumer = locator.createSessionFactory().createSession().createConsumer("jms.queue.GreetingServiceQueue");
+            ClientConsumer consumer = hqMixIn.getClientSession().createConsumer(JMS_PREFIX+QUEUE);
             ClientMessage message = consumer.receive(3000);
             Assert.assertNotNull(message);
-            byte[] bytea = new byte[message.getBodySize()];
-            message.getBodyBuffer().readBytes(bytea);
-            Assert.assertEquals("Hello there Tomo :-) ", new String(bytea));
+            Assert.assertEquals("Hello there Tomo :-) ", hqMixIn.readObjectFromMessage(message));
         } finally {
             httpMixIn.uninitialize();
-            ResourceDeployer.removeQueue("GreetingServiceQueue");
+            hqMixIn.uninitialize();
+            ResourceDeployer.removeQueue(QUEUE);
         }
         
         */

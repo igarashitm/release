@@ -18,15 +18,10 @@
  */
 package org.switchyard.test.quickstarts;
 
-import org.hornetq.api.core.TransportConfiguration;
 import org.hornetq.api.core.client.ClientConsumer;
 import org.hornetq.api.core.client.ClientMessage;
 import org.hornetq.api.core.client.ClientProducer;
 import org.hornetq.api.core.client.ClientSession;
-import org.hornetq.api.core.client.ClientSessionFactory;
-import org.hornetq.api.core.client.HornetQClient;
-import org.hornetq.api.core.client.ServerLocator;
-import org.hornetq.core.remoting.impl.netty.NettyConnectorFactory;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
@@ -34,6 +29,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.switchyard.test.ArquillianUtil;
+import org.switchyard.test.mixins.HornetQMixIn;
 import org.switchyard.test.quickstarts.util.ResourceDeployer;
 
 /**
@@ -46,44 +42,43 @@ public class TransformJsonQuickstartTest {
     private static final String JMS_PREFIX = "jms.queue.";
     private static final String REQUEST_QUEUE = "OrderServiceQueue";
     private static final String RESPONSE_QUEUE = "StoreResponseQueue";
+    private static final String USER = "guest";
+    private static final String PASSWD = "guestp";
     
     @Deployment(testable = false)
     public static JavaArchive createDeployment() throws Exception {
         ResourceDeployer.addQueue(REQUEST_QUEUE);
         ResourceDeployer.addQueue(RESPONSE_QUEUE);
+        ResourceDeployer.addPropertiesUser(USER, PASSWD);
         return ArquillianUtil.createJarQSDeployment("switchyard-quickstart-transform-json");
     }
 
     @Test
     public void testDeployment() throws Exception {
-        ServerLocator locator = HornetQClient.createServerLocatorWithoutHA(new TransportConfiguration(NettyConnectorFactory.class.getName()));
-        ClientSessionFactory sessionFactory = locator.createSessionFactory();
-        
+        HornetQMixIn hqMixIn = new HornetQMixIn(false)
+                                    .setUser(USER)
+                                    .setPassword(PASSWD);
+        hqMixIn.initialize();
+
         try {
-            ClientSession session = sessionFactory.createSession();
-            session.start();
-            ClientMessage message = session.createMessage(true);
-            message.getBodyBuffer().writeBytes(ORDER_JSON.getBytes());
+            ClientSession session = hqMixIn.getClientSession();
+            ClientMessage message = hqMixIn.createMessage(ORDER_JSON);
             ClientProducer producer = session.createProducer(JMS_PREFIX+REQUEST_QUEUE);
             producer.send(message);
-            producer.close();
-            session.close();
+            HornetQMixIn.closeClientProducer(producer);
+            HornetQMixIn.closeSession(session);
 
-            session = sessionFactory.createSession();
-            session.start();
+            session = hqMixIn.createClientSession();
             ClientConsumer consumer = session.createConsumer(JMS_PREFIX+RESPONSE_QUEUE);
             message = consumer.receive(3000);
             Assert.assertNotNull(message);
+            Assert.assertEquals(ORDER_ACK_JSON, hqMixIn.readObjectFromMessage(message));
 
-            byte[] bytea = new byte[message.getBodySize()];
-            message.getBodyBuffer().readBytes(bytea);
-            Assert.assertEquals(ORDER_ACK_JSON, new String(bytea));
-            
             message.acknowledge();
-            consumer.close();
-            session.close();
+            HornetQMixIn.closeClientConsumer(consumer);
+            HornetQMixIn.closeSession(session);
         } finally {
-            locator.close();
+            hqMixIn.uninitialize();
             ResourceDeployer.removeQueue(REQUEST_QUEUE);
             ResourceDeployer.removeQueue(RESPONSE_QUEUE);
         }
