@@ -26,11 +26,15 @@
 
     <resources>
         <resource-root path="switchyard-validate-${project.version}.jar"/>
+        <!-- workaround for the AS7-6636 - just depend on xerces once it's fixed -->
+        <resource-root path="../../../../org/apache/xerces/main/xercesImpl-2.9.1-jbossas-1.jar"/>
     </resources>
 
     <dependencies>
         <module name="javax.api"/>
         <module name="org.apache.log4j"/>
+        <!-- <module name="org.apache.xerces"/> -->
+        <module name="org.apache.xml-resolver"/>
         <module name="org.switchyard.api"/>
         <module name="org.switchyard.common"/>
         <module name="org.switchyard.common.cdi"/>
