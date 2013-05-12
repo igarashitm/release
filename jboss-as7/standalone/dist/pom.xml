@@ -310,7 +310,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <argLine>-Xms512m -Xmx512m</argLine>
+                    <argLine>-Xms512m -Xmx512m -XX:+HeapDumpOnOutOfMemoryError</argLine>
                     <environmentVariables>
                         <JBOSS_HOME>${switchyard.jboss.home}</JBOSS_HOME>
                         <SWITCHYARD_VERSION>${project.version}</SWITCHYARD_VERSION>
