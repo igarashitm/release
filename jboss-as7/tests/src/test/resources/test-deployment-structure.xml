@@ -1,0 +1,8 @@
+<jboss-deployment-structure>
+    <deployment>
+        <dependencies>
+            <module name="org.jboss.as.connector"/>
+            <module name="org.jboss.ironjacamar.api"/>
+        </dependencies>
+    </deployment>
+</jboss-deployment-structure>
