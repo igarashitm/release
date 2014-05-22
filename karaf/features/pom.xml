@@ -33,6 +33,10 @@
     <name>SwitchYard: Karaf Features</name>
     <description>Feature descriptions for running Switchyard on Karaf</description>
     <url>http://switchyard.org</url>
+    <properties>
+        <version.org.apache.activemq>5.9.0.redhat-610379</version.org.apache.activemq>
+        <version.org.apache.camel>2.12.0.redhat-610379</version.org.apache.camel>
+    </properties>
     <build>
         <resources>
             <resource>
