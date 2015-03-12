@@ -20,10 +20,8 @@ import org.switchyard.component.test.mixins.http.HTTPMixIn;
 import org.switchyard.karaf.test.quickstarts.AbstractQuickstartTest;
 
 /**
- * Requires some fixes in jBPM to get the basic bpm stuff working. Needs more
- * work to get the webapp stuff working.
+ * HelpdeskDemoQuickstartTest.
  */
-@Ignore
 public class HelpdeskDemoQuickstartTest extends AbstractQuickstartTest {
     private static String bundleName = "org.switchyard.quickstarts.demos.switchyard.demo.helpdesk";
     private static String featureName = "switchyard-demo-helpdesk";

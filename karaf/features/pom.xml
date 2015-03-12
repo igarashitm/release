@@ -25,6 +25,8 @@
     <description>Feature descriptions for running Switchyard on Karaf</description>
     <url>http://switchyard.org</url>
     <properties>
+        <!-- MyFaces requires commons-digester [1.8.0,2.0.0), and ip-bom specifies 1.8, which doesn't satisfy the requirement -->
+        <version.commons-digester.helpdesk>1.8.1</version.commons-digester.helpdesk>
         <!-- These versions align with the Karaf container. -->
         <version.commons-beanutils>1.9.2</version.commons-beanutils>
         <version.org.apache.deltaspike>1.0.0</version.org.apache.deltaspike>
